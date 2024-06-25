@@ -17,7 +17,7 @@ public class ClientHandler extends Thread {
         this.server = server;
     }
 
-    public   String authorization(RxTx rxTx) throws ClassNotFoundException {
+    public String authorization(RxTx rxTx) throws ClassNotFoundException {
         try {
             while (true) {
             rxTx.txAndLog(MessageType.REQUEST_NAME_USER.toString() + " #" + " Здравствуйте, для регистрации, введите свое Имя и Фамилию через пробел" + "\n");
@@ -54,7 +54,7 @@ public class ClientHandler extends Thread {
                     server.sendMessageAllUsers(MessageType.NEW_MESSAGE + " # " + textmessage);
                 }
                 if (func.equals(MessageType.DISCONNECTED.toString())) {
-                    server.sendMessageAllUsers(MessageType.DISCONNECTED + user + " покинул чат!");
+                    server.sendMessageAllUsers(MessageType.DISCONNECTED+ " # " + user + " покинул чат!");
                     server.allUserChat.remove(user);
                     rxTx.close();
                 }
