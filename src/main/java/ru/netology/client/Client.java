@@ -1,7 +1,6 @@
 package ru.netology.client;
 
 import ru.netology.MessageType;
-import ru.netology.RxTx;
 
 import java.io.*;
 import java.net.Socket;
@@ -9,107 +8,81 @@ import java.net.Socket;
 public class Client {
 
     private static final File FILEWITHSOCKET = new File("src/main/resources/settings.txt");
+    static LoggerC loggerC = LoggerC.getInstance();
     private static String IPv4;
     private static int PORT;
 
-    static LoggerC loggerC = LoggerC.getInstance();
-
-
-    public Client(String IPv4, int PORT) {
-        this.IPv4 = IPv4;
-        this.PORT = PORT;
-    }
-
     public static void main(String[] args) {
 
-        Client client = null;
-        if (FILEWITHSOCKET.exists()) {
-            try (BufferedReader br = new BufferedReader(new FileReader(FILEWITHSOCKET))) {
-                String s;
-                while ((s = br.readLine()) != null) {
-                    String[] parts = s.split(":");
-                    String address = parts[0];
-                    int port = Integer.parseInt(parts[1]);
-                    client = new Client(address, port);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+        try (BufferedReader fileReader = new BufferedReader(new FileReader(FILEWITHSOCKET))) {
+            String[] parts = fileReader.readLine().split(":");
+            IPv4 = parts[0];
+            PORT = Integer.parseInt(parts[1]);
+        } catch (IOException e) {
             System.out.println("Создайте файл src/main/resources/settings.txt c записью в формате: 'ipv4:port' !");
-
+            return;
         }
 
+
         try (Socket socket = new Socket(IPv4, PORT);
-             RxTx rxTx = new RxTx(socket);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)) ){
+             BufferedReader serverIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter serverOut = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
             loggerC.log("Клиент подключен к серверу!");
-            // Ожидание и обработка ответа от сервера
-            while (true) {
-                String request = rxTx.rx();
-                loggerC.log(request);
-                String[] requestParts = request.split(" # ");
+
+            String serverResponse;
+            while ((serverResponse = serverIn.readLine()) != null) {
+                loggerC.log(serverResponse);
+                String[] requestParts = serverResponse.split(" # ");
                 MessageType messageType = MessageType.valueOf(requestParts[0]);
                 String messageContent = requestParts[1];
-
                 switch (messageType) {
                     case REQUEST_NAME_USER:
                         System.out.println(messageContent);
-                        String userInput = reader.readLine().trim();
-                        rxTx.txAndLog(MessageType.RESPONSE_NAME_USER + " # " + userInput + "\n");
-                        loggerC.log(MessageType.RESPONSE_NAME_USER + " # " + userInput + "\n");
+                        String name = consoleReader.readLine().trim();
+                        serverOut.println(MessageType.RESPONSE_NAME_USER + " # " + name);
                         break;
-
-                    case NAME_USED:
+                    case CONNECTED, INFO, NAME_USED, DISCONNECTED , INVALID_INPUT:
                         System.out.println(messageContent);
-                        userInput = reader.readLine().trim();
                         break;
-
-
-                    case CONNECTED:
+                    case USER_ACCEPTED, NEW_MESSAGE:
                         System.out.println(messageContent);
-                        System.out.println("Для выхода из чата введите '/exit'.");
+                        enterNewMessageLoop(serverOut, consoleReader, socket, MessageType.NEW_MESSAGE).start();
                         break;
-
-                    case USER_ACCEPTED:
-                        System.out.println(messageContent.replace("[", "").replace("]", ""));
-
-                        // Запуск потока для приема сообщений от сервера
-                        new Thread(() -> {
-                            try {
-                                while (true) {
-                                    String serverMessage = rxTx.rx();
-                                    System.out.println(serverMessage);
-                                    loggerC.log(serverMessage);
-                                }
-                            } catch (IOException | ClassNotFoundException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
-
-                        // Цикл отправки сообщений от клиента
-                        while (true) {
-                            String clientMessage = reader.readLine().trim();
-                            if ("/exit".equals(clientMessage)) {
-                                rxTx.txAndLog(MessageType.DISCONNECTED + " #" + "\n");
-                                loggerC.log("Отключение от сервера!");
-                                break;
-                            }
-                            rxTx.txAndLog(MessageType.NEW_MESSAGE + " # " + clientMessage + "\n");
-                            loggerC.log(MessageType.NEW_MESSAGE + " # " + clientMessage);
-                        }
-                        return;
 
                     default:
                         System.err.println("Неизвестный тип сообщения от сервера: " + messageType);
                         break;
                 }
+//                if(consoleReader)
             }
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            loggerC.log("Клиент отключен от сервера");
+            System.exit(0);
         }
     }
-}
 
+
+    private static Thread enterNewMessageLoop(PrintWriter out, BufferedReader reader, Socket socket, MessageType type) throws IOException {
+        return new Thread(() -> {
+            String clientMessage;
+            try {
+                while ((clientMessage = reader.readLine().trim()) != null) {
+                    if ("/exit".equals(clientMessage)) {
+                        out.println(MessageType.DISCONNECTED + " # /exit");
+                        loggerC.log("Отключение от сервера!");
+                        socket.close();
+                        break;
+                    }
+                    out.println(type + " # " + clientMessage);
+                    loggerC.log(type + " # " + clientMessage);
+                }
+                } catch(IOException e){
+                    throw new RuntimeException(e);
+                }
+
+
+        });
+    }
+}
 

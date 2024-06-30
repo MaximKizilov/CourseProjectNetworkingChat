@@ -27,15 +27,15 @@ public class LoggerC {
 
     public void log(String message) {
         if (FILEWITHLOGGER.exists()) {
-        try (BufferedWriter filewriter = new BufferedWriter(new FileWriter(FILEWITHLOGGER, true))) {
-            filewriter.write("["  /*+ message.getTypeMessage()*/ + "#" +
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern(" HH:mm dd-MM-yyyy")) + "]" + " === " + message);
-            filewriter.append('\n');
-            filewriter.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }else{
+            try (BufferedWriter filewriter = new BufferedWriter(new FileWriter(FILEWITHLOGGER, true))) {
+                filewriter.write("["  /*+ message.getTypeMessage()*/ + "#" +
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern(" HH:mm dd-MM-yyyy")) + "]" + " === " + message);
+                filewriter.append('\n');
+                filewriter.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
             try {
                 FILEWITHLOGGER.createNewFile();
             } catch (IOException e) {

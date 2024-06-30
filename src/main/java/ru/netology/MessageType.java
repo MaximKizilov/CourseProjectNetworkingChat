@@ -8,5 +8,8 @@ public enum MessageType {
     REQUEST_NAME_USER,
     RESPONSE_NAME_USER,
     NAME_USED,
-    USER_ACCEPTED
+    USER_ACCEPTED,
+    INVALID_INPUT,
+    INFO
+
 }
