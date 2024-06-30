@@ -3,21 +3,13 @@ package ru.netology;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.netology.server.ClientHandler;
-import ru.netology.server.Server;
-
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class ClientHandlerTest {
 
@@ -37,6 +29,7 @@ public class ClientHandlerTest {
 
         Mockito.verify(printWriter).println("NAME_USED # Имя пользователя не может оставаться пустым!!");
     }
+
     @Test
     void testMessagingBetweenUsersNewMessage() throws IOException {
         Socket socket = Mockito.mock(Socket.class);

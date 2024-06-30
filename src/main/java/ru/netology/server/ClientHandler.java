@@ -9,7 +9,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static ru.netology.server.Server.allUserChat;
 
@@ -56,11 +55,11 @@ public class ClientHandler implements Runnable {
                     loggerS.log(MessageType.REQUEST_NAME_USER + " #" + " Здравствуйте, для регистрации, введите свое Имя и Фамилию через пробел");
                     Thread.sleep(Duration.ofSeconds(3));
                     response = in.readLine();
-                   String[] msg = response.toString().split(" # ");
+                    String[] msg = response.split(" # ");
                     authorization(msg, out);
                 } else
                     response = in.readLine();
-                String[] msg = response.toString().split(" # ");
+                String[] msg = response.split(" # ");
                 messagingBetweenUsers(msg);
             }
         } catch (IOException e) {

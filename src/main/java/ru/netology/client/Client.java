@@ -42,7 +42,7 @@ public class Client {
                         String name = consoleReader.readLine().trim();
                         serverOut.println(MessageType.RESPONSE_NAME_USER + " # " + name);
                         break;
-                    case CONNECTED, INFO, NAME_USED, DISCONNECTED , INVALID_INPUT:
+                    case CONNECTED, INFO, NAME_USED, DISCONNECTED, INVALID_INPUT:
                         System.out.println(messageContent);
                         break;
                     case USER_ACCEPTED, NEW_MESSAGE:
@@ -77,9 +77,9 @@ public class Client {
                     out.println(type + " # " + clientMessage);
                     loggerC.log(type + " # " + clientMessage);
                 }
-                } catch(IOException e){
-                    throw new RuntimeException(e);
-                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
 
         });
